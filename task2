@@ -1,0 +1,77 @@
+#LEVEL 3 Task:2 Customer Preference Analysis
+
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+file_path = r'C:\Users\LENOVO\Downloads\Dataset .csv' 
+try:
+    df = pd.read_csv(file_path)
+except FileNotFoundError:
+    print("Error: Dataset file not found. Please check the file path.")
+    exit()
+
+# Normalize column names
+df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('[^a-z0-9_]', '', regex=True)
+
+# Check if necessary columns exist
+required_columns = ['cuisines', 'aggregate_rating', 'votes']
+missing_columns = [col for col in required_columns if col not in df.columns]
+if missing_columns:
+    print(f"Error: Missing columns in the dataset - {missing_columns}")
+    exit()
+
+# Step 1: Relationship Between Cuisine and Rating
+print("\nAnalyzing Relationship Between Cuisine and Rating:")
+
+# Expand the cuisines column to handle multiple cuisines per restaurant
+df['cuisines_list'] = df['cuisines'].str.split(',').apply(lambda x: [i.strip() for i in x] if isinstance(x, list) else [])
+cuisines_ratings = df.explode('cuisines_list').groupby('cuisines_list')['aggregate_rating'].mean().sort_values(ascending=False)
+
+print("\nAverage Rating by Cuisine:")
+print(cuisines_ratings)
+
+# Visualize the top cuisines by average rating
+plt.figure(figsize=(12, 6))
+cuisines_ratings.head(10).plot(kind='bar', color='skyblue')
+plt.title("Top 10 Cuisines by Average Rating")
+plt.ylabel("Average Rating")
+plt.xlabel("Cuisine")
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+# Step 2: Most Popular Cuisines by Number of Votes
+print("\nIdentifying Most Popular Cuisines by Votes:")
+
+cuisines_votes = df.explode('cuisines_list').groupby('cuisines_list')['votes'].sum().sort_values(ascending=False)
+
+print("\nTop 10 Most Popular Cuisines by Votes:")
+print(cuisines_votes.head(10))
+
+# Visualize the most popular cuisines by votes
+plt.figure(figsize=(12, 6))
+cuisines_votes.head(10).plot(kind='bar', color='lightcoral')
+plt.title("Top 10 Most Popular Cuisines by Votes")
+plt.ylabel("Number of Votes")
+plt.xlabel("Cuisine")
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+# Step 3: Identify Cuisines with Higher Ratings
+print("\nIdentifying Specific Cuisines with Higher Ratings:")
+
+# Filter cuisines with an average rating above a threshold
+high_rated_cuisines = cuisines_ratings[cuisines_ratings > cuisines_ratings.mean()]
+print("\nCuisines with Above-Average Ratings:")
+print(high_rated_cuisines)
+
+# Visualize cuisines with above-average ratings
+plt.figure(figsize=(12, 6))
+high_rated_cuisines.plot(kind='bar', color='green')
+plt.title("Cuisines with Above-Average Ratings")
+plt.ylabel("Average Rating")
+plt.xlabel("Cuisine")
+plt.xticks(rotation=45, ha='right')
+plt.show()
