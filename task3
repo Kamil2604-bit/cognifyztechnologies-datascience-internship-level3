@@ -1,0 +1,92 @@
+#LEVEL 3 Task:3 Data Visualization
+
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+file_path = r'C:\Users\LENOVO\Downloads\Dataset .csv' 
+try:
+    df = pd.read_csv(file_path)
+except FileNotFoundError:
+    print("Error: Dataset file not found. Please check the file path.")
+    exit()
+
+# Normalize column names
+df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('[^a-z0-9_]', '', regex=True)
+
+# Check for required columns
+required_columns = ['aggregate_rating', 'cuisines', 'city', 'votes', 'price_range']
+missing_columns = [col for col in required_columns if col not in df.columns]
+if missing_columns:
+    print(f"Error: Missing columns in the dataset - {missing_columns}")
+    exit()
+
+# ** Step 1: Distribution of Ratings **
+print("\nVisualizing the Distribution of Ratings:")
+
+# Histogram for ratings
+plt.figure(figsize=(10, 6))
+sns.histplot(df['aggregate_rating'], bins=15, kde=True, color='skyblue')
+plt.title("Distribution of Ratings")
+plt.xlabel("Aggregate Rating")
+plt.ylabel("Frequency")
+plt.show()
+
+# Bar plot for rating counts
+plt.figure(figsize=(10, 6))
+df['aggregate_rating'].value_counts().sort_index().plot(kind='bar', color='lightgreen')
+plt.title("Counts of Ratings")
+plt.xlabel("Aggregate Rating")
+plt.ylabel("Count")
+plt.show()
+
+# ** Step 2: Compare Average Ratings of Different Cuisines **
+print("\nComparing Average Ratings of Different Cuisines:")
+
+# Explode cuisines column to handle multiple cuisines per restaurant
+df['cuisines_list'] = df['cuisines'].str.split(',').apply(lambda x: [i.strip() for i in x] if isinstance(x, list) else [])
+cuisine_ratings = df.explode('cuisines_list').groupby('cuisines_list')['aggregate_rating'].mean().sort_values(ascending=False)
+
+# Visualize top 10 cuisines by average rating
+plt.figure(figsize=(12, 6))
+cuisine_ratings.head(10).plot(kind='bar', color='coral')
+plt.title("Top 10 Cuisines by Average Rating")
+plt.ylabel("Average Rating")
+plt.xlabel("Cuisine")
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+# ** Step 3: Compare Average Ratings Across Cities **
+print("\nComparing Average Ratings Across Cities:")
+
+city_ratings = df.groupby('city')['aggregate_rating'].mean().sort_values(ascending=False)
+
+# Visualize top 10 cities by average rating
+plt.figure(figsize=(12, 6))
+city_ratings.head(10).plot(kind='bar', color='purple')
+plt.title("Top 10 Cities by Average Rating")
+plt.ylabel("Average Rating")
+plt.xlabel("City")
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+# ** Step 4: Visualize Relationship Between Features and Ratings **
+print("\nVisualizing Relationship Between Features and Ratings:")
+
+# Relationship between votes and ratings
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='votes', y='aggregate_rating', data=df, color='orange')
+plt.title("Relationship Between Votes and Ratings")
+plt.xlabel("Votes")
+plt.ylabel("Aggregate Rating")
+plt.show()
+
+# Boxplot of ratings across price ranges
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='price_range', y='aggregate_rating', data=df, palette='coolwarm')
+plt.title("Ratings Across Price Ranges")
+plt.xlabel("Price Range")
+plt.ylabel("Aggregate Rating")
+plt.show()
